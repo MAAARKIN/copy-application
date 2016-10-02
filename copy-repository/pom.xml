@@ -1,0 +1,25 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>br.com.copy</groupId>
+		<artifactId>copy-appication</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>copy-repository</artifactId>
+	<name>copy Repository</name>
+	
+	<properties>
+		<copy-model-version>0.0.1-SNAPSHOT</copy-model-version>
+	</properties>
+
+	<dependencies>
+		<!-- Model project -->
+		<dependency>
+			<groupId>br.com.copy</groupId>
+			<artifactId>copy-model</artifactId>
+			<version>${copy-model-version}</version>
+			<type>jar</type>
+		</dependency>
+	</dependencies>
+</project>

@@ -1,0 +1,52 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>br.com.copy</groupId>
+		<artifactId>copy-appication</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>copy-service</artifactId>
+	<name>copy Service</name>
+	
+	<properties>
+		<copy-model-version>0.0.1-SNAPSHOT</copy-model-version>
+		<copy-repository-version>0.0.1-SNAPSHOT</copy-repository-version>
+		<copy-jdbc-version>0.0.1-SNAPSHOT</copy-jdbc-version>
+		<copy-core-version>0.0.1-SNAPSHOT</copy-core-version>
+	</properties>
+
+	<dependencies>
+		<!-- Model project -->
+		<dependency>
+			<groupId>br.com.copy</groupId>
+			<artifactId>copy-model</artifactId>
+			<version>${copy-model-version}</version>
+			<type>jar</type>
+		</dependency>
+		
+		<!-- Repository project -->
+		<dependency>
+			<groupId>br.com.copy</groupId>
+			<artifactId>copy-repository</artifactId>
+			<version>${copy-repository-version}</version>
+			<type>jar</type>
+		</dependency>
+		
+		<!-- Jdbc project -->
+		<dependency>
+			<groupId>br.com.copy</groupId>
+			<artifactId>copy-jdbc</artifactId>
+			<version>${copy-jdbc-version}</version>
+			<type>jar</type>
+		</dependency>
+		
+		<!-- Core project -->
+		<dependency>
+			<groupId>br.com.copy</groupId>
+			<artifactId>copy-core</artifactId>
+			<version>${copy-core-version}</version>
+			<type>jar</type>
+		</dependency>
+	</dependencies>
+</project>
