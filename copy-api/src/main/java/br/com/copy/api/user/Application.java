@@ -1,4 +1,4 @@
-package br.com.copy;
+package br.com.copy.api.user;
 
 import static spark.Spark.delete;
 import static spark.Spark.exception;
@@ -11,11 +11,18 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
+import br.com.copy.api.response.DefaultResponse;
 import br.com.copy.exception.ApplicationException;
 import br.com.copy.helper.ResponseStatus;
 import br.com.copy.model.User;
@@ -23,25 +30,52 @@ import br.com.copy.repository.UserRepository;
 import br.com.copy.service.UserService;
 import spark.ResponseTransformer;
 
-@Component
-public class WebContext {
-
+/**
+ * 
+ * @author Marcos Filho
+ *
+ */
+@Configuration
+@ComponentScan("br.com.copy")
+public class Application {
 	public static final String APPLICATION_JSON = "application/json";
-
-	@Autowired private UserRepository usuarios;
-	@Autowired private UserService userService;
-
+	
 	@Value("${application.port}")
 	private String port;
 
+	private static AnnotationConfigApplicationContext ctx;
+	private UserRepository usuarios;
+	private UserService userService;
+	
+	@Autowired
+	public Application(UserRepository usuarios, UserService userService) {
+		this.usuarios = usuarios;
+		this.userService = userService;
+	}
+
+	public static void main(String[] args) {
+		ctx = new AnnotationConfigApplicationContext(Application.class);
+		ctx.getBean(Application.class).startApplication();
+		ctx.registerShutdownHook();
+	}
+
+	// To resolve ${} in @Value
+	@Bean
+	public static PropertyPlaceholderConfigurer propertyConfigInDev() {
+		PropertyPlaceholderConfigurer props = new PropertyPlaceholderConfigurer();
+		props.setLocations(new Resource[] { new ClassPathResource("application.properties") });
+		return props;
+	}
+	
 	public void startApplication() {
 		port(Integer.parseInt(port));
-
+		
 		// busca de todos os usuarios
 		get("/users", (req, res) -> {
+			DefaultResponse response = getAllUsers();
+			res.status(response.getHttpStatus());
 			res.type(APPLICATION_JSON);
-			res.status(HttpStatus.OK_200);
-			return usuarios.findAll();
+			return response.getContentBody();
 		}, jsonConverter());
 
 		//busca de usuario por id
@@ -92,6 +126,11 @@ public class WebContext {
 		});
 		
 		handleExceptions();
+	}
+
+	private DefaultResponse getAllUsers() {
+		return new DefaultResponse(HttpStatus.OK_200, usuarios.findAll());
+//		return usuarios.findAll();
 	}
 
 	/**
