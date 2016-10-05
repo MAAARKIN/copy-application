@@ -7,6 +7,8 @@ import static spark.Spark.port;
 import static spark.Spark.post;
 import static spark.Spark.put;
 
+import java.io.IOException;
+
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
@@ -80,57 +84,75 @@ public class Application {
 
 		//busca de usuario por id
 		get("/users/:id", (req, res) -> {
-			User usuario = usuarios.findById(Long.valueOf(req.params("id")));
-			if (usuario == null) throw new ApplicationException(ResponseStatus.USER_NOT_EXIST);
+			
+			DefaultResponse content = findUserById(Long.valueOf(req.params("id")));
 			
 			res.type(APPLICATION_JSON);
-			res.status(HttpStatus.OK_200);
-			
-			return usuario;
+			res.status(content.getHttpStatus());
+			return content.getContentBody();
 		}, jsonConverter());
 
 		//adicionando novo usuario
 		post("/users", (req, res) -> {
-			// processo utilizado para converter o JSON em Object, utilizando a api Jackson 2
-			ObjectMapper mapper = new ObjectMapper();
-			User usuario = mapper.readValue(req.body(), User.class);
+			DefaultResponse content = saveUser(req.body());
 			
-			// chamar o service
-			userService.save(usuario);
-			res.status(HttpStatus.CREATED_201);
-			return "";
+			res.status(content.getHttpStatus());
+			return content.getContentBody();
 		});
 		
 		put("/users/:id", (req, res) -> {
-			Long id = Long.valueOf(req.params("id"));
-
-			ObjectMapper mapper = new ObjectMapper();
-			User usuario = mapper.readValue(req.body(), User.class);
-			
-			usuario.setId(id);
-			userService.update(usuario);
-			res.status(HttpStatus.OK_200);
-			return "";
+			DefaultResponse content = updateUser(Long.valueOf(req.params("id")), req.body());
+			res.status(content.getHttpStatus());
+			return content.getContentBody();
 		});
 		
 		delete("/users/:id", (req, res) -> {
-			Long id = Long.valueOf(req.params("id"));
-			User userBase = usuarios.findById(id);
-			
-			if (userBase == null) throw new ApplicationException(ResponseStatus.USER_NOT_EXIST);
-			
-			// possível candidato a chamar o service
-			usuarios.delete(id);
-			res.status(HttpStatus.OK_200);
-			return "";
+			DefaultResponse content = deleteUser(Long.valueOf(req.params("id")));
+			res.status(content.getHttpStatus());
+			return content.getContentBody();
 		});
 		
 		handleExceptions();
 	}
 
+	private DefaultResponse updateUser(Long id, String body) throws JsonParseException, JsonMappingException, IOException, ApplicationException {
+		ObjectMapper mapper = new ObjectMapper();
+		User usuario = mapper.readValue(body, User.class);
+		
+		usuario.setId(id);
+		userService.update(usuario);
+		return new DefaultResponse(HttpStatus.OK_200, "");
+	}
+
+	private DefaultResponse deleteUser(Long id) throws ApplicationException {
+		User userBase = usuarios.findById(id);
+		if (userBase == null) throw new ApplicationException(ResponseStatus.USER_NOT_EXIST);
+		
+		// possível candidato a chamar o service
+		usuarios.delete(id);
+		return new DefaultResponse(HttpStatus.OK_200, "");
+	}
+
+	private DefaultResponse saveUser(String body) throws JsonParseException, JsonMappingException, IOException {
+		// processo utilizado para converter o JSON em Object, utilizando a api Jackson 2
+		ObjectMapper mapper = new ObjectMapper();
+		User usuario = mapper.readValue(body, User.class);
+
+		// chamar o service
+		userService.save(usuario);
+		return new DefaultResponse(HttpStatus.OK_200, "");
+	}
+
+	private DefaultResponse findUserById(Long id) throws ApplicationException {
+		User usuario = usuarios.findById(id);
+		if (usuario == null) throw new ApplicationException(ResponseStatus.USER_NOT_EXIST);
+		
+		return new DefaultResponse(HttpStatus.OK_200, usuario);
+	}
+
 	private DefaultResponse getAllUsers() {
 		return new DefaultResponse(HttpStatus.OK_200, usuarios.findAll());
-//		return usuarios.findAll();
+		// return usuarios.findAll();
 	}
 
 	/**
